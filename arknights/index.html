@@ -74,12 +74,12 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', '2184762152394803');
-fbq('track', 'PageView');
+fbq('trackCustom', 'go2offer', {offer:'arknights-endfield', trigger:'page_load'});
 </script>
 <!-- End Meta Pixel Code -->
 </head>
 <body>
-<noscript><img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=2184762152394803&ev=PageView&noscript=1"></noscript>
+<noscript><img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=2184762152394803&ev=go2offer&noscript=1"></noscript>
 
 <main class="hero">
   <img class="poster" src="assets/hero-cine-poster.webp" alt="" aria-hidden="true">
@@ -119,15 +119,14 @@ fbq('track', 'PageView');
       url = u.toString();
     }
   }catch(e){}
-  // --- Click: dataLayer + Meta Pixel custom event "go2offer", then go to the offer ---
-  // Short delay so the Meta Pixel request leaves before the page unloads.
+  // --- Click: dataLayer event, then go to the offer ---
+  // (Meta Pixel "go2offer" is sent once on page load, see <head>; not repeated here to avoid double counting.)
   var leaving = false;
   function goOffer(pos){
     if(leaving) return; leaving = true;
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({event:"go2offer", offer:"arknights-endfield", variant:"combat", cta_position:pos});
-    if(window.fbq) fbq("trackCustom", "go2offer", {offer:"arknights-endfield", cta_position:pos});
-    setTimeout(function(){ window.location.href = url; }, 250);
+    window.location.href = url;
   }
   document.querySelectorAll(".js-cta").forEach(function(a){
     a.href = url;
