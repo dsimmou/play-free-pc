@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Entropy – Command Mechs, Conquer the Entropy Zone</title>
+<meta name="description" content="Project Entropy is a free-to-play sci-fi strategy game for Windows PC: build your base, command mechs and team up with an alliance.">
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#191d24">
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/HarmonyOS_Sans_Bold.woff2" crossorigin>
+<link rel="preload" as="image" href="assets/hero-gameplay-poster.webp">
+<style>
+  @font-face{font-family:"HarmonyOS Sans";src:url("assets/fonts/HarmonyOS_Sans_Regular.woff2") format("woff2"),url("assets/fonts/HarmonyOS_Sans_Regular.8773fbb.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
+  @font-face{font-family:"HarmonyOS Sans";src:url("assets/fonts/HarmonyOS_Sans_Bold.woff2") format("woff2"),url("assets/fonts/HarmonyOS_Sans_Bold.b04efd4.ttf") format("truetype");font-weight:700;font-style:normal;font-display:swap}
+
+  :root{ --bg:#191d24; --text:#ffffff; --muted:#d8d8d8; --accent:#2ca1b6; --accent-2:#30aebf; --accent-soft:#99dce2; --neon:#48f6f2; --panel:#0d3e47; --panel-2:#145d6b; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--text);font:16px/1.6 "HarmonyOS Sans",system-ui,sans-serif;overflow:hidden}
+
+  .hero{cursor:pointer}
+  .hero{position:relative;height:100vh;height:100svh;display:flex;flex-direction:column;overflow:hidden;isolation:isolate;padding:0 clamp(16px,4vw,48px)}
+  /* full-screen gameplay video behind everything */
+  .hero video,.hero .poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}
+  /* mobile: dark bottom for the text block */
+  .hero::after{content:"";position:absolute;inset:0;z-index:-1;
+    background:linear-gradient(180deg,rgba(25,29,36,.6) 0%,rgba(25,29,36,.1) 16%,rgba(25,29,36,.25) 40%,rgba(25,29,36,.9) 64%,var(--bg) 100%)}
+  /* desktop: dark left side for the text, action visible on the right */
+  @media (min-width:900px){
+    .hero::after{background:linear-gradient(90deg,rgba(25,29,36,.94) 0%,rgba(25,29,36,.78) 34%,rgba(25,29,36,.2) 64%,rgba(25,29,36,0) 100%),
+                            linear-gradient(180deg,rgba(25,29,36,.5) 0%,transparent 16%,transparent 84%,rgba(25,29,36,.6) 100%)}
+    .content{margin:auto 0 !important;max-width:min(640px,46vw)}
+    .legal{max-width:min(640px,46vw)}
+  }
+
+  .top{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+  .brand{display:block;line-height:0}
+  .brand img{height:clamp(30px,5.5vh,44px);width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,.6))}
+  .tag{font-size:12px;color:var(--muted)}
+
+  .content{margin-top:auto;padding-bottom:clamp(12px,2.5vh,24px)}
+  .eyebrow{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--neon);border:1px solid var(--accent);background:rgba(13,62,71,.55);padding:6px 12px;border-radius:999px;margin-bottom:clamp(10px,2vh,18px)}
+  h1{font-family:"HarmonyOS Sans",system-ui,sans-serif;font-weight:700;font-size:clamp(30px,min(6vw,7.5vh),60px);line-height:1.05;letter-spacing:.01em}
+  h1 em{font-style:normal;color:var(--accent-soft)}
+  .lead{max-width:560px;margin:clamp(10px,2vh,16px) 0 clamp(16px,3vh,26px);color:var(--muted);font-size:clamp(15px,2.1vw,18px)}
+
+  .cta{display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;font-weight:700;font-size:18px;
+       padding:17px 34px;border-radius:999px;color:var(--bg);background:var(--accent);
+       animation:pulse 2.4s infinite;transition:transform .15s,background-color .15s}
+  .cta:hover{transform:translateY(-2px);background:var(--accent-2)}
+  .cta svg{width:20px;height:20px}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(72,246,242,.45)}70%{box-shadow:0 0 0 18px rgba(72,246,242,0)}100%{box-shadow:0 0 0 0 rgba(72,246,242,0)}}
+  .sub{margin-top:10px;font-size:13px;color:var(--muted)}
+  .platforms{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .chip{font-size:12px;padding:5px 12px;border-radius:999px;background:rgba(20,93,107,.55);border:1px solid var(--panel-2);color:var(--muted)}
+
+  .legal{padding:0 0 12px;font-size:10.5px;line-height:1.45;color:var(--muted)}
+
+  @media (max-width:600px){ .cta{width:100%} .tag{display:none} }
+  @media (max-height:600px){ .lead{display:none} }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<main class="hero">
+  <img class="poster" src="assets/hero-gameplay-poster.webp" alt="" aria-hidden="true">
+  <video id="heroVid" muted loop playsinline disablepictureinpicture preload="none" poster="assets/hero-gameplay-poster.webp" aria-hidden="true">
+    <source src="assets/hero-gameplay.webm" type="video/webm">
+    <source src="assets/hero-gameplay.mp4" type="video/mp4">
+  </video>
+
+  <div class="top">
+    <div class="brand"><img src="assets/logo/entropy-logo.png" alt="Project Entropy" width="278" height="61"></div>
+  </div>
+
+  <div class="content">
+    <h1>Build Your Army.<br><em>Crush the Swarm.</em></h1>
+    <p class="lead">Recruit heroes, arm them with mechs and wipe out alien hordes in a free sci-fi strategy game for PC.</p>
+    <a class="cta js-cta" href="https://to.dordir.com/5A8G/2J1A0/" rel="nofollow sponsored noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+      Join the Fight – Free on PC
+    </a>
+  </div>
+</main>
+
+<script>
+(function(){
+  // --- Offer link + forwarding of incoming query params (gclid, utm_*, sub ids…) ---
+  var OFFER = "https://to.dordir.com/5A8G/2J1A0/";
+  var FORWARD_PARAMS = true;
+  var url = OFFER;
+  try{
+    if(FORWARD_PARAMS && location.search.length > 1){
+      var u = new URL(OFFER), p = new URLSearchParams(location.search);
+      p.forEach(function(v,k){ if(!u.searchParams.has(k)) u.searchParams.set(k,v); });
+      url = u.toString();
+    }
+  }catch(e){}
+  document.querySelectorAll(".js-cta").forEach(function(a){
+    a.href = url;
+    a.addEventListener("click",function(){
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({event:"go2offer", offer:"project-entropy", cta_position:"hero"});
+    });
+  });
+
+  // --- Whole page clickable (the CTA keeps its own link + event) ---
+  document.querySelector(".hero").addEventListener("click",function(e){
+    if(e.target.closest(".js-cta")) return;
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({event:"go2offer", offer:"project-entropy", cta_position:"page"});
+    window.location.href = url;
+  });
+
+  // --- Hero video: load after first paint, skip on reduced motion / data saver ---
+  var hv = document.getElementById("heroVid");
+  var saveData = navigator.connection && navigator.connection.saveData;
+  var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!saveData && !still){
+    window.addEventListener("load", function(){
+      hv.muted = true; hv.preload = "auto"; hv.load();
+      var pr = hv.play(); if(pr && pr.catch) pr.catch(function(){});
+    });
+  }
+})();
+</script>
+</body>
+</html>

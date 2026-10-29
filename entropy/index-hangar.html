@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Entropy – Build Your Army, Crush the Swarm</title>
+<meta name="description" content="Project Entropy is a free-to-play sci-fi strategy game for Windows PC: recruit heroes, arm them with mechs and wipe out alien hordes.">
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#191d24">
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/HarmonyOS_Sans_Bold.woff2" crossorigin>
+<link rel="preload" as="image" href="assets/hero-cockpit-poster.webp">
+<link rel="preload" as="image" href="assets/hangar/hero-oscar.webp">
+<style>
+  @font-face{font-family:"HarmonyOS Sans";src:url("assets/fonts/HarmonyOS_Sans_Regular.woff2") format("woff2"),url("assets/fonts/HarmonyOS_Sans_Regular.8773fbb.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
+  @font-face{font-family:"HarmonyOS Sans";src:url("assets/fonts/HarmonyOS_Sans_Bold.woff2") format("woff2"),url("assets/fonts/HarmonyOS_Sans_Bold.b04efd4.ttf") format("truetype");font-weight:700;font-style:normal;font-display:swap}
+
+  :root{ --bg:#191d24; --text:#ffffff; --muted:#d8d8d8; --accent:#2ca1b6; --accent-2:#30aebf; --accent-soft:#99dce2; --neon:#48f6f2; --panel:#0d3e47; --panel-2:#145d6b;
+         --mx:0; --my:0; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--text);font:16px/1.6 "HarmonyOS Sans",system-ui,sans-serif;overflow:hidden}
+
+  .hangar{cursor:pointer}
+  .hangar{position:relative;height:100vh;height:100svh;overflow:hidden;isolation:isolate;display:grid;
+    grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);grid-template-rows:auto 1fr;column-gap:clamp(24px,4vw,72px);padding:0 max(clamp(16px,4vw,56px),calc((100vw - 1360px) / 2)) clamp(12px,3vh,32px);perspective:1200px}
+
+  /* --- layer 1: cockpit video, slow parallax --- */
+  .bg{position:absolute;inset:-4%;z-index:-3;transform:translate3d(calc(var(--mx) * -14px),calc(var(--my) * -10px),0) scale(1.04);transition:transform .25s ease-out}
+  .bg video,.bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .hangar::before{content:"";position:absolute;inset:0;z-index:-2;
+    background:radial-gradient(ellipse at 72% 55%,rgba(25,29,36,.15) 0%,rgba(25,29,36,.65) 55%,rgba(25,29,36,.92) 100%),
+               linear-gradient(90deg,rgba(25,29,36,.92) 0%,rgba(25,29,36,.55) 45%,rgba(25,29,36,.1) 100%)}
+  /* --- layer 2: holographic floor grid --- */
+  .floor{position:absolute;left:-20%;right:-20%;bottom:-8%;height:48%;z-index:-1;pointer-events:none;
+    background-image:linear-gradient(rgba(72,246,242,.22) 1px,transparent 1px),linear-gradient(90deg,rgba(72,246,242,.22) 1px,transparent 1px);
+    background-size:64px 64px;transform:rotateX(72deg) translate3d(calc(var(--mx) * -20px),0,0);transform-origin:50% 100%;
+    -webkit-mask-image:linear-gradient(0deg,#000 10%,transparent 85%);mask-image:linear-gradient(0deg,#000 10%,transparent 85%);
+    animation:grid 6s linear infinite}
+  @keyframes grid{to{background-position:0 64px,0 0}}
+  .glow{position:absolute;right:12%;top:18%;width:min(46vw,620px);aspect-ratio:1;border-radius:50%;z-index:-1;pointer-events:none;
+    background:radial-gradient(circle,rgba(72,246,242,.28),rgba(44,161,182,.08) 45%,transparent 70%);filter:blur(10px)}
+
+  .top{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;padding:clamp(12px,2.2vh,22px) 0 0}
+  .brand img{display:block;height:clamp(30px,5.5vh,44px);width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,.6))}
+
+  /* --- text column --- */
+  .content{align-self:center;justify-self:start;width:100%;max-width:700px;position:relative;z-index:2}
+  h1{font-weight:700;font-size:clamp(30px,min(5vw,9vh),72px);line-height:1.04;letter-spacing:.01em}
+  h1 em{font-style:normal;color:var(--accent-soft)}
+  .lead{margin:clamp(10px,2vh,18px) 0 clamp(18px,3.4vh,32px);color:var(--muted);font-size:clamp(15px,1.25vw,20px);max-width:34em}
+  .cta{display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;font-weight:700;font-size:18px;
+       padding:clamp(15px,2vh,20px) clamp(28px,2.6vw,42px);font-size:clamp(17px,1.2vw,20px);border-radius:999px;color:var(--bg);background:var(--accent);animation:pulse 2.4s infinite;transition:transform .15s,background-color .15s}
+  .cta:hover{transform:translateY(-2px);background:var(--accent-2)}
+  .cta svg{width:20px;height:20px}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(72,246,242,.45)}70%{box-shadow:0 0 0 18px rgba(72,246,242,0)}100%{box-shadow:0 0 0 0 rgba(72,246,242,0)}}
+
+  /* --- hero stage --- */
+  .stage{align-self:center;justify-self:start;position:relative;display:flex;flex-direction:column;align-items:center;gap:clamp(10px,2vh,18px);
+    transform:translate3d(calc(var(--mx) * 10px),calc(var(--my) * 8px),0);transition:transform .25s ease-out}
+  .card{position:relative;width:clamp(230px,min(28vw,56vh),460px);aspect-ratio:354/510;border-radius:18px;transform-style:preserve-3d;
+    transform:rotateY(calc(var(--mx) * 14deg)) rotateX(calc(var(--my) * -10deg));transition:transform .2s ease-out;
+    animation:float 5s ease-in-out infinite}
+  @keyframes float{50%{translate:0 -8px}}
+  .card .frame{position:absolute;inset:0;border-radius:inherit;overflow:hidden;background:#0b1418;
+    box-shadow:0 0 0 1px rgba(72,246,242,.55),0 0 28px rgba(72,246,242,.35),0 30px 60px rgba(0,0,0,.6)}
+  .card video,.card img.still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .35s}
+  .card .frame::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:linear-gradient(180deg,#0b1418 0%,rgba(11,20,24,0) 11%,rgba(11,20,24,0) 62%,rgba(11,20,24,.92) 74%,#0b1418 100%)}
+  /* holographic shine follows the pointer */
+  .card .shine{position:absolute;inset:0;z-index:3;border-radius:inherit;pointer-events:none;mix-blend-mode:screen;
+    background:radial-gradient(circle at calc(50% + var(--mx) * 45%) calc(40% + var(--my) * 45%),rgba(153,220,226,.38),transparent 45%),
+               linear-gradient(115deg,transparent 35%,rgba(72,246,242,.14) 48%,rgba(255,255,255,.18) 50%,rgba(72,246,242,.14) 52%,transparent 65%);
+    background-size:100% 100%,250% 250%;background-position:center,calc(50% + var(--mx) * 60%) 50%}
+  .card .scan{position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;opacity:.25;
+    background:repeating-linear-gradient(0deg,rgba(72,246,242,.12) 0 1px,transparent 1px 3px)}
+  .plate{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:0 16px 16px;transform:translateZ(40px)}
+  .plate .tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--neon);
+    border:1px solid var(--accent);background:rgba(13,62,71,.7);padding:3px 8px;border-radius:4px}
+  .plate .name{display:block;font-weight:700;font-size:clamp(18px,2vw,24px);line-height:1.15;margin-top:6px;text-shadow:0 2px 10px rgba(0,0,0,.8)}
+  .corner{position:absolute;width:22px;height:22px;z-index:4;border:2px solid var(--neon);pointer-events:none}
+  .corner.tl{top:-6px;left:-6px;border-right:0;border-bottom:0;border-radius:6px 0 0 0}
+  .corner.br{bottom:-6px;right:-6px;border-left:0;border-top:0;border-radius:0 0 6px 0}
+
+  .picker{display:flex;gap:8px}
+  .pick{width:clamp(40px,3.4vw,54px);height:clamp(40px,3.4vw,54px);border-radius:10px;overflow:hidden;border:1px solid var(--panel-2);background:#0b1418;cursor:pointer;padding:0;opacity:.6;transition:opacity .2s,border-color .2s,transform .2s}
+  .pick img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
+  .pick:hover{opacity:.9}
+  .pick[aria-pressed="true"]{opacity:1;border-color:var(--neon);box-shadow:0 0 12px rgba(72,246,242,.5);transform:translateY(-2px)}
+  .pick:focus-visible{outline:2px solid var(--neon);outline-offset:2px}
+
+  /* --- layer 4: official ship, foreground parallax --- */
+  .ship{position:absolute;z-index:3;pointer-events:none;width:clamp(170px,17vw,290px);right:clamp(-90px,-4vw,-30px);bottom:clamp(6px,3vh,40px);
+    transform:translate3d(calc(var(--mx) * 34px),calc(var(--my) * 22px),0) rotate(-6deg);transition:transform .25s ease-out;
+    filter:drop-shadow(0 18px 24px rgba(0,0,0,.65))}
+  .ship img{width:100%;display:block;animation:hover 4s ease-in-out infinite}
+  @keyframes hover{50%{translate:0 -10px}}
+  .ship::after{content:"";position:absolute;right:2%;top:42%;width:30%;height:22%;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,170,80,.55),transparent 70%);filter:blur(8px);animation:thrust .6s ease-in-out infinite alternate}
+  @keyframes thrust{to{opacity:.45;transform:scaleX(1.25)}}
+
+  .dust{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .dust i{position:absolute;width:3px;height:3px;border-radius:50%;background:var(--neon);opacity:0;box-shadow:0 0 6px var(--neon);animation:rise linear infinite}
+  @keyframes rise{0%{opacity:0;transform:translateY(0)}15%{opacity:.8}100%{opacity:0;transform:translateY(-60vh)}}
+
+  /* mobile: hero card on top, text below */
+  @media (max-width:820px){
+    .hangar{grid-template-columns:1fr;grid-template-rows:auto auto 1fr;row-gap:clamp(10px,2vh,18px);padding-bottom:16px}
+    .stage{grid-row:2;justify-self:center;margin-top:0}
+    .content{grid-row:3;align-self:center;justify-self:stretch;max-width:none}
+    .card{width:clamp(170px,min(64vw,44vh),300px)}
+    .pick{width:36px;height:36px}
+    .ship{display:none}
+    .cta{width:100%}
+    .glow{right:-10%;top:6%;width:90vw}
+  }
+  @media (max-height:620px){ .lead{display:none} }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<main class="hangar" id="hangar">
+  <div class="bg" aria-hidden="true">
+    <img src="assets/hero-cockpit-poster.webp" alt="">
+    <video id="bgVid" muted loop playsinline disablepictureinpicture preload="none" poster="assets/hero-cockpit-poster.webp">
+      <source src="assets/hero-cockpit.webm" type="video/webm">
+      <source src="assets/hero-cockpit.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="glow" aria-hidden="true"></div>
+  <div class="floor" aria-hidden="true"></div>
+  <div class="dust" id="dust" aria-hidden="true"></div>
+
+  <div class="top">
+    <div class="brand"><img src="assets/logo/entropy-logo.png" alt="Project Entropy" width="278" height="61"></div>
+  </div>
+
+  <div class="content">
+    <h1>Build Your Army.<br><em>Crush the Swarm.</em></h1>
+    <p class="lead">Recruit heroes, arm them with mechs and wipe out alien hordes in a free sci-fi strategy game for PC.</p>
+    <a class="cta js-cta" href="https://to.dordir.com/5A8G/2J1A0/" rel="nofollow sponsored noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+      Join the Fight – Free on PC
+    </a>
+  </div>
+
+  <div class="stage">
+    <div class="card" id="card">
+      <div class="frame">
+        <img class="still" id="heroStill" src="assets/hangar/hero-oscar.webp" alt="">
+        <video id="heroVid" muted loop playsinline disablepictureinpicture preload="none" aria-hidden="true"></video>
+        <div class="scan"></div>
+        <div class="shine"></div>
+      </div>
+      <div class="plate">
+        <span class="tag" id="heroTag">Hero</span>
+        <span class="name" id="heroName">Oscar Basatos</span>
+      </div>
+      <i class="corner tl"></i><i class="corner br"></i>
+    </div>
+    <div class="picker" role="group" aria-label="Choose a hero">
+      <button class="pick" type="button" data-i="0" aria-pressed="true"><img src="assets/hangar/hero-oscar.webp" alt="Oscar Basatos"></button>
+      <button class="pick" type="button" data-i="1" aria-pressed="false"><img src="assets/hangar/hero-canaan.webp" alt="Canaan Oryx"></button>
+      <button class="pick" type="button" data-i="2" aria-pressed="false"><img src="assets/hangar/hero-cordelia.webp" alt="Cordelia Wornax"></button>
+      <button class="pick" type="button" data-i="3" aria-pressed="false"><img src="assets/hangar/hero-hydra.webp" alt="Hydra"></button>
+    </div>
+  </div>
+
+  <div class="ship" aria-hidden="true"><img src="assets/hangar/ship.webp" alt="" width="706" height="407"></div>
+</main>
+
+<script>
+(function(){
+  // --- Offer link + forwarding of incoming query params (gclid, utm_*, sub ids…) ---
+  var OFFER = "https://to.dordir.com/5A8G/2J1A0/";
+  var FORWARD_PARAMS = true;
+  var url = OFFER;
+  try{
+    if(FORWARD_PARAMS && location.search.length > 1){
+      var u = new URL(OFFER), p = new URLSearchParams(location.search);
+      p.forEach(function(v,k){ if(!u.searchParams.has(k)) u.searchParams.set(k,v); });
+      url = u.toString();
+    }
+  }catch(e){}
+  function push(o){ window.dataLayer = window.dataLayer || []; window.dataLayer.push(o); }
+
+  // --- Prelander A -> B chain ---
+  // Click: affiliate offer A opens in a NEW tab, then this tab loads prelander B (Arknights).
+  // Incoming query params (gclid, utm_*, sub ids…) are passed on to prelander B.
+  var NEXT = "../arknights/index.html";
+  var nextUrl = NEXT + location.search;
+  function goOffer(pos){
+    push({event:"go2offer", offer:"project-entropy", variant:"hangar", cta_position:pos, hero:HEROES[cur].id, next:"arknights"});
+    var w = window.open(url, "_blank");
+    if(!w){ window.location.href = url; return; }   // popup blocked: fall back to the offer in this tab
+    try{ w.opener = null; }catch(err){}
+    setTimeout(function(){ window.location.href = nextUrl; }, 150);
+  }
+  document.querySelectorAll(".js-cta").forEach(function(a){
+    a.href = url; a.target = "_blank";
+    a.addEventListener("click",function(e){ e.preventDefault(); e.stopPropagation(); goOffer("hero"); });
+  });
+
+  // --- Whole page clickable (hero picker stays interactive) ---
+  document.getElementById("hangar").addEventListener("click",function(e){
+    if(e.target.closest(".js-cta, .pick")) return;
+    goOffer(e.target.closest(".card") ? "hero_card" : "page");
+  });
+
+  var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var saveData = navigator.connection && navigator.connection.saveData;
+  var root = document.documentElement;
+
+  // --- Hero picker ---
+  var HEROES = [
+    {id:"oscar",    name:"Oscar Basatos",   tag:"Hero"},
+    {id:"canaan",   name:"Canaan Oryx",     tag:"Hero"},
+    {id:"cordelia", name:"Cordelia Wornax", tag:"Hero"},
+    {id:"hydra",    name:"Hydra",           tag:"Unit"}
+  ];
+  var cur = 0, auto = null, touched = false;
+  var hv = document.getElementById("heroVid"), hs = document.getElementById("heroStill");
+  var picks = document.querySelectorAll(".pick");
+  function show(i, byUser){
+    cur = i; var h = HEROES[i];
+    picks.forEach(function(b){ b.setAttribute("aria-pressed", b.dataset.i == i ? "true" : "false"); });
+    document.getElementById("heroName").textContent = h.name;
+    document.getElementById("heroTag").textContent = h.tag;
+    hs.src = "assets/hangar/hero-" + h.id + ".webp"; hs.style.opacity = 1;
+    if(!still && !saveData){
+      hv.style.opacity = 0;
+      hv.innerHTML = '<source src="assets/hangar/hero-' + h.id + '.webm" type="video/webm"><source src="assets/hangar/hero-' + h.id + '.mp4" type="video/mp4">';
+      hv.muted = true; hv.load();
+      var pr = hv.play(); if(pr && pr.catch) pr.catch(function(){});
+    }
+    if(byUser) push({event:"hero_select", offer:"project-entropy", hero:h.id});
+  }
+  hv.addEventListener("playing", function(){ hv.style.opacity = 1; });
+  picks.forEach(function(b){ b.addEventListener("click", function(){ touched = true; clearInterval(auto); show(+b.dataset.i, true); }); });
+  if(!still) auto = setInterval(function(){ if(!touched) show((cur + 1) % HEROES.length, false); }, 5000);
+
+  // --- Pointer parallax + card tilt (desktop) ---
+  var raf = 0, tx = 0, ty = 0;
+  if(!still && window.matchMedia("(pointer:fine)").matches){
+    window.addEventListener("pointermove", function(e){
+      tx = (e.clientX / innerWidth - .5) * 2; ty = (e.clientY / innerHeight - .5) * 2;
+      if(!raf) raf = requestAnimationFrame(function(){ raf = 0; root.style.setProperty("--mx", tx.toFixed(3)); root.style.setProperty("--my", ty.toFixed(3)); });
+    });
+  }
+
+  // --- Floating particles ---
+  if(!still){
+    var d = document.getElementById("dust");
+    for(var k = 0; k < 22; k++){
+      var p = document.createElement("i");
+      p.style.left = (Math.random() * 100) + "%"; p.style.top = (55 + Math.random() * 45) + "%";
+      p.style.animationDuration = (6 + Math.random() * 8) + "s"; p.style.animationDelay = (-Math.random() * 10) + "s";
+      d.appendChild(p);
+    }
+  }
+
+  // --- Load videos after first paint ---
+  window.addEventListener("load", function(){
+    if(still || saveData) return;
+    var bv = document.getElementById("bgVid");
+    bv.muted = true; bv.preload = "auto"; bv.load();
+    var pr = bv.play(); if(pr && pr.catch) pr.catch(function(){});
+    show(0, false);
+  });
+})();
+</script>
+</body>
+</html>
