@@ -103,17 +103,26 @@
   @keyframes rise{0%{opacity:0;transform:translateY(0)}15%{opacity:.8}100%{opacity:0;transform:translateY(-60vh)}}
 
   /* mobile: hero card on top, text below */
+  /* mobile: logo / hero card / text + CTA, sized on the real screen height so the CTA is always visible */
   @media (max-width:820px){
-    .hangar{grid-template-columns:1fr;grid-template-rows:auto auto 1fr;row-gap:clamp(10px,2vh,18px);padding-bottom:16px}
-    .stage{grid-row:2;justify-self:center;margin-top:0}
-    .content{grid-row:3;align-self:center;justify-self:stretch;max-width:none}
-    .card{width:clamp(170px,min(64vw,44vh),300px)}
-    .pick{width:36px;height:36px}
+    .hangar{display:flex;flex-direction:column;justify-content:space-between;gap:clamp(8px,1.8svh,18px);
+      padding:0 16px max(14px,env(safe-area-inset-bottom))}
+    .top{padding-top:clamp(10px,1.8svh,16px)}
+    .brand img{height:clamp(26px,4.2svh,38px)}
+    .top{order:0} .stage{order:1} .content{order:2}
+    .stage{flex:1 1 auto;min-height:0;justify-content:center;gap:0;transform:none}
+    .card{width:auto;height:clamp(200px,46svh,440px);max-width:74vw;animation:none}
+    .plate{padding:0 12px 12px}
+    .picker{display:none}
+    .content{flex:0 0 auto;width:100%;max-width:none;justify-self:auto}
+    h1{font-size:clamp(26px,min(7.6vw,4.6svh),36px)}
+    .lead{margin:8px 0 14px;font-size:clamp(14px,3.8vw,16px)}
+    .cta{width:100%;padding:16px 20px;font-size:17px}
     .ship{display:none}
-    .cta{width:100%}
     .glow{right:-10%;top:6%;width:90vw}
   }
-  @media (max-height:620px){ .lead{display:none} }
+  @media (max-width:820px) and (max-height:700px){ .lead{display:none} .card{height:clamp(180px,44svh,360px)} }
+  @media (min-width:821px) and (max-height:620px){ .lead{display:none} }
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -201,9 +210,9 @@
     a.addEventListener("click",function(e){ e.preventDefault(); e.stopPropagation(); goOffer("hero"); });
   });
 
-  // --- Whole page clickable (hero picker stays interactive) ---
+  // --- Whole page clickable (hero thumbnails included; heroes rotate automatically) ---
   document.getElementById("hangar").addEventListener("click",function(e){
-    if(e.target.closest(".js-cta, .pick")) return;
+    if(e.target.closest(".js-cta")) return;
     goOffer(e.target.closest(".card") ? "hero_card" : "page");
   });
 
@@ -236,7 +245,6 @@
     if(byUser) push({event:"hero_select", offer:"project-entropy", hero:h.id});
   }
   hv.addEventListener("playing", function(){ hv.style.opacity = 1; });
-  picks.forEach(function(b){ b.addEventListener("click", function(){ touched = true; clearInterval(auto); show(+b.dataset.i, true); }); });
   if(!still) auto = setInterval(function(){ if(!touched) show((cur + 1) % HEROES.length, false); }, 5000);
 
   // --- Pointer parallax + card tilt (desktop) ---
