@@ -74,7 +74,16 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', '2184762152394803');
-fbq('trackCustom', 'go2offer', {offer:'arknights-endfield', trigger:'page_load'});
+// No double tracking: if prelander A already sent go2offer after the human check (cookie pf_g2o, 30 min), skip it here
+(function(){
+  var k = "pf_g2o", done = /(?:^|; )pf_g2o=1/.test(document.cookie);
+  try{ var o = JSON.parse(localStorage.getItem(k)); if(o && o.exp > Date.now()) done = true; }catch(e){}
+  if(done){
+    try{ document.cookie = k + "=; max-age=0; path=/"; localStorage.removeItem(k); }catch(e){}
+  } else {
+    fbq('trackCustom', 'go2offer', {offer:'arknights-endfield', trigger:'page_load'}, {eventID:'g2o-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)});
+  }
+})();
 </script>
 <!-- End Meta Pixel Code -->
 </head>

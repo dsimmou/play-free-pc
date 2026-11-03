@@ -10,6 +10,26 @@
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/HarmonyOS_Sans_Bold.woff2" crossorigin>
 <link rel="preload" as="image" href="assets/hero-cockpit-poster.webp">
 <link rel="preload" as="image" href="assets/hangar/hero-oscar.webp">
+<script>
+// --- First-party storage: cookie + localStorage fallback (file:// has no cookies) ---
+window.PF = {
+  get:function(k){
+    var m = document.cookie.match(new RegExp("(?:^|; )" + k + "=([^;]*)")); if(m) return m[1];
+    try{ var o = JSON.parse(localStorage.getItem(k)); if(o && o.exp > Date.now()) return o.v; }catch(e){}
+    return null;
+  },
+  set:function(k,v,sec){
+    try{ document.cookie = k + "=" + v + "; max-age=" + sec + "; path=/; SameSite=Lax" + (location.protocol === "https:" ? "; Secure" : ""); }catch(e){}
+    try{ localStorage.setItem(k, JSON.stringify({v:v, exp:Date.now() + sec * 1000})); }catch(e){}
+  },
+  del:function(k){
+    try{ document.cookie = k + "=; max-age=0; path=/"; }catch(e){}
+    try{ localStorage.removeItem(k); }catch(e){}
+  }
+};
+// Verified visitors (cookie pf_verified) skip the swipe check and get the normal CTA
+if(PF.get("pf_verified") === "1") document.documentElement.classList.add("pf-ok");
+</script>
 <style>
   @font-face{font-family:"HarmonyOS Sans";src:url("assets/fonts/HarmonyOS_Sans_Regular.woff2") format("woff2"),url("assets/fonts/HarmonyOS_Sans_Regular.8773fbb.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
   @font-face{font-family:"HarmonyOS Sans";src:url("assets/fonts/HarmonyOS_Sans_Bold.woff2") format("woff2"),url("assets/fonts/HarmonyOS_Sans_Bold.b04efd4.ttf") format("truetype");font-weight:700;font-style:normal;font-display:swap}
@@ -53,6 +73,28 @@
   .cta:hover{transform:translateY(-2px);background:var(--accent-2)}
   .cta svg{width:20px;height:20px}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(72,246,242,.45)}70%{box-shadow:0 0 0 18px rgba(72,246,242,0)}100%{box-shadow:0 0 0 0 rgba(72,246,242,0)}}
+
+  /* --- human check: swipe to continue (hidden once pf_verified cookie is set) --- */
+  html:not(.pf-ok) .js-cta{display:none}
+  html.pf-ok .verify{display:none}
+  .swipe{position:relative;width:min(100%,440px);height:clamp(56px,7vh,64px);border-radius:999px;overflow:hidden;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+    background:rgba(13,62,71,.78);border:1px solid var(--accent);box-shadow:0 0 24px rgba(72,246,242,.25)}
+  .swipe:focus-visible{outline:2px solid var(--neon);outline-offset:3px}
+  .swipe-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,rgba(44,161,182,.55),rgba(72,246,242,.55))}
+  .swipe-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding-left:52px;font-weight:700;font-size:clamp(16px,1.15vw,19px);white-space:nowrap;
+    background:linear-gradient(90deg,#fff 0,#fff 40%,var(--neon) 50%,#fff 60%,#fff 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 2.4s linear infinite}
+  @keyframes shimmer{from{background-position:100% 0}to{background-position:-100% 0}}
+  .swipe-knob{position:absolute;top:4px;left:4px;bottom:4px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;color:var(--bg);background:var(--accent);
+    box-shadow:0 0 16px rgba(72,246,242,.6);animation:nudge 2.4s ease-in-out infinite}
+  .swipe-knob svg{width:22px;height:22px}
+  @keyframes nudge{0%,60%,100%{translate:0}75%{translate:16px}}
+  .swipe.drag{cursor:grabbing}
+  .swipe.drag .swipe-knob,.swipe.done .swipe-knob{animation:none}
+  .swipe.back .swipe-knob,.swipe.back .swipe-fill{transition:transform .3s ease-out,width .3s ease-out}
+  .swipe.done .swipe-label{animation:none;background:none;color:var(--neon)}
+  .swipe.shake{animation:shake .45s}
+  @keyframes shake{20%,60%{translate:-8px 0}40%,80%{translate:8px 0}}
+  .verify-note{margin-top:10px;font-size:13px;color:var(--muted)}
 
   /* --- hero stage --- */
   .stage{align-self:center;justify-self:start;position:relative;display:flex;flex-direction:column;align-items:center;gap:clamp(10px,2vh,18px);
@@ -118,6 +160,8 @@
     h1{font-size:clamp(26px,min(7.6vw,4.6svh),36px)}
     .lead{margin:8px 0 14px;font-size:clamp(14px,3.8vw,16px)}
     .cta{width:100%;padding:16px 20px;font-size:17px}
+    .swipe{width:100%;height:58px}
+    .verify-note{margin-top:8px;font-size:12px}
     .ship{display:none}
     .glow{right:-10%;top:6%;width:90vw}
   }
@@ -151,6 +195,14 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
       Join the Fight – Free on PC
     </a>
+    <div class="verify">
+      <div class="swipe" id="swipe" role="slider" tabindex="0" aria-label="Slide to join the fight" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="swipe-fill" id="swipeFill"></div>
+        <span class="swipe-label" id="swipeLabel">Slide to Join the Fight</span>
+        <span class="swipe-knob" id="swipeKnob"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+      <p class="verify-note">Free on PC · Quick human check, one time only</p>
+    </div>
   </div>
 
   <div class="stage">
@@ -198,27 +250,99 @@
   // Incoming query params (gclid, utm_*, sub ids…) are passed on to prelander B.
   var NEXT = "../arknights/index.html";
   var nextUrl = NEXT + location.search;
-  function goOffer(pos){
+  var leaving = false;
+  function goOffer(pos, delay){
+    if(leaving) return; leaving = true;
     push({event:"go2offer", offer:"project-entropy", variant:"hangar", cta_position:pos, hero:HEROES[cur].id, next:"arknights"});
     var w = window.open(url, "_blank");
     if(!w){ window.location.href = url; return; }   // popup blocked: fall back to the offer in this tab
     try{ w.opener = null; }catch(err){}
-    setTimeout(function(){ window.location.href = nextUrl; }, 150);
+    setTimeout(function(){ window.location.href = nextUrl; }, delay || 150);
   }
   document.querySelectorAll(".js-cta").forEach(function(a){
     a.href = url; a.target = "_blank";
     a.addEventListener("click",function(e){ e.preventDefault(); e.stopPropagation(); goOffer("hero"); });
   });
 
+  // --- Meta Pixel: NOT loaded on arrival; loaded when the visitor starts the swipe, event sent only once verified ---
+  // Dedup with prelander B: cookie pf_g2o (30 min) tells B the go2offer event was already sent here.
+  var PIXEL_ID = "2184762152394803", pixelReady = false, pixelLoading = false;
+  function loadPixel(){
+    if(pixelLoading) return; pixelLoading = true;
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;
+      t.onload=function(){ pixelReady = true; };
+      s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('set', 'autoConfig', false, PIXEL_ID);   // no automatic events (button clicks, microdata)
+    fbq('init', PIXEL_ID);                       // init alone sends no event (no PageView)
+  }
+  function trackGo2offer(){
+    if(!pixelReady) return false;               // script not loaded in time: B will send the event on load
+    fbq('trackCustom', 'go2offer', {offer:'project-entropy', trigger:'verification'}, {eventID:'g2o-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)});
+    PF.set("pf_g2o", "1", 1800);
+    return true;
+  }
+
+  // --- Human check: swipe the knob to the end ---
+  var root = document.documentElement;
+  var verified = root.classList.contains("pf-ok");
+  var sw = document.getElementById("swipe"), knob = document.getElementById("swipeKnob"), fill = document.getElementById("swipeFill");
+  var drag = null;
+  function setPos(x, max){
+    knob.style.transform = "translateX(" + x + "px)";
+    fill.style.width = (x + knob.offsetWidth + 4) + "px";
+    sw.setAttribute("aria-valuenow", Math.round(x / max * 100));
+  }
+  function verifyOk(how){
+    verified = true;
+    PF.set("pf_verified", "1", 60 * 60 * 24 * 30);   // remembered 30 days
+    sw.classList.add("done"); document.getElementById("swipeLabel").textContent = "Verified – Let's go";
+    push({event:"human_verified", offer:"project-entropy", method:how});
+    var sent = trackGo2offer();
+    goOffer("swipe", sent ? 350 : 150);               // a bit more time for the pixel request to leave
+  }
+  sw.addEventListener("pointerdown", function(e){
+    if(verified || !e.isTrusted) return;
+    loadPixel();
+    sw.setPointerCapture(e.pointerId); sw.classList.remove("back"); sw.classList.add("drag");
+    drag = {x0:e.clientX, t0:performance.now(), moves:0, max:sw.clientWidth - knob.offsetWidth - 8, x:0};
+  });
+  sw.addEventListener("pointermove", function(e){
+    if(!drag) return;
+    drag.moves++; drag.x = Math.max(0, Math.min(drag.max, e.clientX - drag.x0));
+    setPos(drag.x, drag.max);
+  });
+  function endDrag(e){
+    if(!drag) return;
+    var d = drag; drag = null; sw.classList.remove("drag");
+    // human-like: reached the end, several move events, took at least 200 ms
+    if(e.type === "pointerup" && d.x >= d.max * .9 && d.moves >= 4 && performance.now() - d.t0 >= 200){ setPos(d.max, d.max); verifyOk("swipe"); }
+    else { sw.classList.add("back"); setPos(0, d.max); }
+  }
+  sw.addEventListener("pointerup", endDrag);
+  sw.addEventListener("pointercancel", endDrag);
+  sw.addEventListener("keydown", function(e){   // keyboard access
+    if(verified || !e.isTrusted || (e.key !== "Enter" && e.key !== " " && e.key !== "ArrowRight")) return;
+    e.preventDefault(); loadPixel();
+    var max = sw.clientWidth - knob.offsetWidth - 8; setPos(max, max);
+    setTimeout(function(){ verifyOk("keyboard"); }, 250);
+  });
+  sw.addEventListener("click", function(e){ e.stopPropagation(); });
+  function nudge(){
+    sw.classList.remove("shake"); void sw.offsetWidth; sw.classList.add("shake");
+    push({event:"verify_prompt", offer:"project-entropy"});
+  }
+
   // --- Whole page clickable (hero thumbnails included; heroes rotate automatically) ---
+  // Before verification a click points the visitor to the swipe instead of leaving
   document.getElementById("hangar").addEventListener("click",function(e){
     if(e.target.closest(".js-cta")) return;
+    if(!verified){ nudge(); return; }
     goOffer(e.target.closest(".card") ? "hero_card" : "page");
   });
 
   var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var saveData = navigator.connection && navigator.connection.saveData;
-  var root = document.documentElement;
 
   // --- Hero picker ---
   var HEROES = [
