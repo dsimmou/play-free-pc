@@ -74,21 +74,20 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', '2184762152394803');
-// No double tracking: if prelander A already sent go2offer after the human check (cookie pf_g2o, 30 min), skip it here
+// go2offer is sent ONCE per visitor, here only (not on prelander A): cookie pf_g2o (30 days) blocks reloads and return visits
 (function(){
   var k = "pf_g2o", done = /(?:^|; )pf_g2o=1/.test(document.cookie);
   try{ var o = JSON.parse(localStorage.getItem(k)); if(o && o.exp > Date.now()) done = true; }catch(e){}
-  if(done){
-    try{ document.cookie = k + "=; max-age=0; path=/"; localStorage.removeItem(k); }catch(e){}
-  } else {
-    fbq('trackCustom', 'go2offer', {offer:'arknights-endfield', trigger:'page_load'}, {eventID:'g2o-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)});
-  }
+  if(done) return;
+  fbq('trackCustom', 'go2offer', {offer:'arknights-endfield', trigger:'page_load'}, {eventID:'g2o-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)});
+  var sec = 60 * 60 * 24 * 30;
+  try{ document.cookie = k + "=1; max-age=" + sec + "; path=/; SameSite=Lax" + (location.protocol === "https:" ? "; Secure" : ""); }catch(e){}
+  try{ localStorage.setItem(k, JSON.stringify({v:"1", exp:Date.now() + sec * 1000})); }catch(e){}
 })();
 </script>
 <!-- End Meta Pixel Code -->
 </head>
 <body>
-<noscript><img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=2184762152394803&ev=go2offer&noscript=1"></noscript>
 
 <main class="hero">
   <img class="poster" src="assets/hero-cine-poster.webp" alt="" aria-hidden="true">

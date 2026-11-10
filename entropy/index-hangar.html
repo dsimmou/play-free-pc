@@ -264,24 +264,7 @@ if(PF.get("pf_verified") === "1") document.documentElement.classList.add("pf-ok"
     a.addEventListener("click",function(e){ e.preventDefault(); e.stopPropagation(); goOffer("hero"); });
   });
 
-  // --- Meta Pixel: NOT loaded on arrival; loaded when the visitor starts the swipe, event sent only once verified ---
-  // Dedup with prelander B: cookie pf_g2o (30 min) tells B the go2offer event was already sent here.
-  var PIXEL_ID = "2184762152394803", pixelReady = false, pixelLoading = false;
-  function loadPixel(){
-    if(pixelLoading) return; pixelLoading = true;
-    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;
-      t.onload=function(){ pixelReady = true; };
-      s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-    fbq('set', 'autoConfig', false, PIXEL_ID);   // no automatic events (button clicks, microdata)
-    fbq('init', PIXEL_ID);                       // init alone sends no event (no PageView)
-  }
-  function trackGo2offer(){
-    if(!pixelReady) return false;               // script not loaded in time: B will send the event on load
-    fbq('trackCustom', 'go2offer', {offer:'project-entropy', trigger:'verification'}, {eventID:'g2o-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)});
-    PF.set("pf_g2o", "1", 1800);
-    return true;
-  }
+  // (No Meta Pixel on this page: go2offer is sent once, on prelander B)
 
   // --- Human check: swipe the knob to the end ---
   var root = document.documentElement;
@@ -298,12 +281,10 @@ if(PF.get("pf_verified") === "1") document.documentElement.classList.add("pf-ok"
     PF.set("pf_verified", "1", 60 * 60 * 24 * 30);   // remembered 30 days
     sw.classList.add("done"); document.getElementById("swipeLabel").textContent = "Verified – Let's go";
     push({event:"human_verified", offer:"project-entropy", method:how});
-    var sent = trackGo2offer();
-    goOffer("swipe", sent ? 350 : 150);               // a bit more time for the pixel request to leave
+    goOffer("swipe");
   }
   sw.addEventListener("pointerdown", function(e){
     if(verified || !e.isTrusted) return;
-    loadPixel();
     sw.setPointerCapture(e.pointerId); sw.classList.remove("back"); sw.classList.add("drag");
     drag = {x0:e.clientX, t0:performance.now(), moves:0, max:sw.clientWidth - knob.offsetWidth - 8, x:0};
   });
@@ -323,7 +304,7 @@ if(PF.get("pf_verified") === "1") document.documentElement.classList.add("pf-ok"
   sw.addEventListener("pointercancel", endDrag);
   sw.addEventListener("keydown", function(e){   // keyboard access
     if(verified || !e.isTrusted || (e.key !== "Enter" && e.key !== " " && e.key !== "ArrowRight")) return;
-    e.preventDefault(); loadPixel();
+    e.preventDefault();
     var max = sw.clientWidth - knob.offsetWidth - 8; setPos(max, max);
     setTimeout(function(){ verifyOk("keyboard"); }, 250);
   });
